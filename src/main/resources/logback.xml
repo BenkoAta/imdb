@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.spring.boot" level="OFF"/>
+    <logger name="org.apache" level="OFF"/>
+    <logger name="org.hibernate" level="INFO"/>
+    <logger name="org.hibernate.type" level="INFO"/>
+<!--    Transactions -->
+    <logger name="org.hibernate.engine.transaction.internal" level="OFF"/>
+    <logger name="org.hibernate.orm.jdbc.bind" level="OFF"/>
+<!--    parameter binding-->
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="OFF"/>
+    <!--    <logger name="org.hibernate.type.descriptor.sql" level="TRACE" />-->
+<!--    SQL commands-->
+    <logger name="org.hibernate.SQL" level="off"/>
+<!--    Transaction manager-->
+<!--    <logger name="org.springframework.transaction" level="TRACE" />-->
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>

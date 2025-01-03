@@ -1,0 +1,20 @@
+create empty mariadb container:
+docker run -p 3307:3306 --name imdb -e MARIADB_ROOT_PASSWORD=root -d mariadb
+
+start/stop docker container:
+docker start imdb
+docker stop imdb
+
+recovery from saved state:
+docker exec -i imdb mariadb --user root --password=root <imdb.sql
+
+login to mariadb sql client:
+docker exec -it imdb mariadb --user root --password=root
+
+create User in database:
+grant all privileges on *.* to 'imdb'@'%' identified by 'imdb';
+flush privileges;
+---------------------------------------------------------------------------------
+run with local db (docker container) in IDEA
+Run Configuration:
+Environment variables: SERVER_SERVLET_CONTEXT-PATH=/imdb;spring_datasource_url=jdbc:mariadb://localhost:3307/imdb;spring_datasource_password=imdb
