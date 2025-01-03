@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,6 +73,10 @@ public class JwtService {
         }
         return result;
     }
+    public LocalDateTime getExpirationTime(String token, Date referenceDate) {
+        Date expiration = extractExpiration(token, referenceDate);
+        return LocalDateTime.ofInstant(expiration.toInstant(), ZoneId.systemDefault());
+    }
     public boolean isTokenValid(String token, UserDetails userDetails, Date referenceDate) {
         final String username = extractUsername(token, referenceDate);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token, referenceDate);
@@ -89,4 +95,6 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+
 }
