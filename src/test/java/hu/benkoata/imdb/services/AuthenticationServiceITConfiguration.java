@@ -1,11 +1,14 @@
 package hu.benkoata.imdb.services;
 
 import hu.benkoata.imdb.repositories.UserRepository;
+import hu.benkoata.imdb.services.security.GoogleAuthenticatorService;
 import hu.benkoata.imdb.services.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.servlet.ModelAndView;
 
 @TestConfiguration
 public class AuthenticationServiceITConfiguration {
@@ -15,11 +18,17 @@ public class AuthenticationServiceITConfiguration {
     private long jwtExpirationSecs;
     @SuppressWarnings("unused")
     @Bean
-    AuthenticationService getAuthenticationService(UserRepository userRepository,
+    public AuthenticationService getAuthenticationService(UserRepository userRepository,
                                                    PasswordEncoder passwordEncoder) {
         return new AuthenticationService(userRepository,
                 passwordEncoder,
                 null,
-                new JwtService(secretKey, jwtExpirationSecs));
+                new JwtService(secretKey, jwtExpirationSecs),
+                new GoogleAuthenticatorService());
+    }
+    @SuppressWarnings("unused")
+    @Bean
+    HandlerExceptionResolver getHandlerExceptionResolver() {
+        return (request, response, handler, ex) -> new ModelAndView();
     }
 }

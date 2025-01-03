@@ -41,7 +41,8 @@ public class User implements UserDetails {
     @UpdateTimestamp
     @Column(insertable = false, columnDefinition = "datetime")
     private LocalDateTime updatedAt;
-
+    @Column(length = 32)
+    private String gAuthKey;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();

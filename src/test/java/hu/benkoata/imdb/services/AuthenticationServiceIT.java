@@ -2,6 +2,7 @@ package hu.benkoata.imdb.services;
 
 import hu.benkoata.imdb.ImdbApplication;
 import hu.benkoata.imdb.configurations.ApplicationAuthenticationConfiguration;
+import hu.benkoata.imdb.configurations.JwtAuthenticationFilter;
 import hu.benkoata.imdb.configurations.SecurityConfig;
 import hu.benkoata.imdb.dtos.CreateUserCommand;
 import hu.benkoata.imdb.dtos.CreateUserDto;
@@ -21,8 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest(showSql = false)
 @ContextConfiguration(classes = {
         ImdbApplication.class,
-        SecurityConfig.class,
         ApplicationAuthenticationConfiguration.class,
+        JwtAuthenticationFilter.class,
+        SecurityConfig.class,
         AuthenticationServiceITConfiguration.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -42,5 +44,6 @@ class AuthenticationServiceIT {
         CreateUserCommand command = new CreateUserCommand("John Doe", "a@b.c", "d");
         CreateUserDto actual = authenticationService.createUser(null, command);
         assertThat(actual.getId()).isPositive();
+        System.out.println(actual.getQrUrl());
     }
 }

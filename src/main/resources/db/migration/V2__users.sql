@@ -1,0 +1,1 @@
+alter table users add column g_auth_key varchar(32);

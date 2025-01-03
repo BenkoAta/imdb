@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @SuppressWarnings("unused")
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
-    @PostMapping("/users")
+    @PostMapping(value = "/users")
     @ResponseStatus(HttpStatus.CREATED)
     @SecurityRequirements()
     public CreateUserDto createUser(
