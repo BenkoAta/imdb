@@ -4,9 +4,10 @@ import lombok.Data;
 import lombok.ToString;
 
 @Data
-@ToString(exclude = "password")
-public class CredentialsCommand {
+@ToString(exclude = {"password", "newPassword"})
+public class ChangeCredentialsCommand {
     private String username;
     private String password;
     private int totpCode;
+    private String newPassword;
 }

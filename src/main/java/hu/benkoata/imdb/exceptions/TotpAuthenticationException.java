@@ -7,6 +7,9 @@ import java.net.URI;
 @SuppressWarnings("java:S110")
 public class TotpAuthenticationException extends AbstractThrowableProblem {
     public TotpAuthenticationException(String requestURI) {
-        super(URI.create(requestURI + "/invalid-totp-code"), "Invalid TOTP code", Status.UNAUTHORIZED, "Access denied!");
+        super(URI.create(requestURI + "/invalid-totp-code"),
+                "Invalid TOTP code",
+                Status.UNAUTHORIZED,
+                "Access denied!");
     }
 }

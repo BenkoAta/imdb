@@ -43,6 +43,13 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
     @Column(length = 32)
     private String gAuthKey;
+    private int emailVerificationCode;
+    private boolean accountLocked = true;
+    @Override
+    public boolean isAccountNonLocked() {
+        return !accountLocked;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();
@@ -60,4 +67,5 @@ public class User implements UserDetails {
     public int hashCode() {
         return Objects.hash(id);
     }
+
 }

@@ -3,6 +3,7 @@ package hu.benkoata.imdb.services;
 import hu.benkoata.imdb.repositories.UserRepository;
 import hu.benkoata.imdb.services.security.GoogleAuthenticatorService;
 import hu.benkoata.imdb.services.security.JwtService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -18,9 +19,11 @@ public class AuthenticationServiceITConfiguration {
     private long jwtExpirationSecs;
     @SuppressWarnings("unused")
     @Bean
-    public AuthenticationService getAuthenticationService(UserRepository userRepository,
-                                                   PasswordEncoder passwordEncoder) {
-        return new AuthenticationService(userRepository,
+    public AuthenticationService getAuthenticationService(ModelMapper modelMapper,
+                                                          UserRepository userRepository,
+                                                          PasswordEncoder passwordEncoder) {
+        return new AuthenticationService(modelMapper,
+                userRepository,
                 passwordEncoder,
                 null,
                 new JwtService(secretKey, jwtExpirationSecs),
