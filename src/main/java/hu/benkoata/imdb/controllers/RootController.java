@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Properties;
@@ -21,16 +20,24 @@ import java.util.Properties;
 @Slf4j
 @Tag(name = "root operations")
 @RequiredArgsConstructor
-@RequestMapping("/api")
 public class RootController {
-    @GetMapping("/")
+    private static final String ROOT_TEMPLATE = "<title>%1$s</title>Webapp name: %1$s<br>Version: %2$s<br><a href=%3$s>swagger-UI</a>";
+    @GetMapping({"/","/api"})
     @Operation(summary = "get webapp name and version")
     @SecurityRequirements()
     public String getRoot(HttpServletRequest httpServletRequest,
                           @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        ConfigFile cf = new ConfigFile(ImdbApplication.class, "project.properties");
-        Properties props = cf.read();
-        return String.format("%s %s", props.getProperty("artifactId"), props.getProperty("version"));
+        Properties props = new ConfigFile(ImdbApplication.class, "project.properties").read();
+        return String.format(ROOT_TEMPLATE, props.getProperty("artifactId"), props.getProperty("version"),
+                getSwaggerUrl(httpServletRequest));
+    }
+
+    private String getSwaggerUrl(HttpServletRequest request) {
+        return String.format("%s://%s:%d%s/swagger-ui/index.html",
+                request.getScheme(),
+                request.getServerName(),
+                request.getServerPort(),
+                request.getContextPath());
     }
 }

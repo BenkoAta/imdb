@@ -22,7 +22,7 @@
     <logger name="org.hibernate.SQL" level="off"/>
 <!--    Transaction manager-->
 <!--    <logger name="org.springframework.transaction" level="TRACE" />-->
-
+    <logger name="hu.benkoata.imdb" level="debug"/>
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

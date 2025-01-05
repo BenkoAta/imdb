@@ -12,7 +12,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -62,9 +64,9 @@ public class AuthenticationService {
     }
 
     private User authenticate(String requestURI, String username, String password, int totpCode) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
         User result = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UserNotFoundException(requestURI, username));
+                .orElseThrow(() -> new BadCredentialsException("User not found with name: " + username));
         googleAuthenticatorService.authenticate(requestURI, result, totpCode);
         return result;
     }
