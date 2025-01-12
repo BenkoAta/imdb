@@ -45,6 +45,12 @@ public class User implements UserDetails {
     private String gAuthKey;
     private int emailVerificationCode;
     private boolean accountLocked = true;
+    private boolean emailVerified = false;
+    private int deleteCode;
+    private Integer resetPasswordCode;
+    @Column(insertable = false, columnDefinition = "datetime")
+    private LocalDateTime resetPasswordUntil;
+
     @Override
     public boolean isAccountNonLocked() {
         return !accountLocked;

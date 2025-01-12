@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 @RequiredArgsConstructor
-public class ConfigFile {
+public class ConfigFileReaderService {
     private final Class<?> aClass;
     private final String fileName;
     private static final Charset charset = StandardCharsets.UTF_8;

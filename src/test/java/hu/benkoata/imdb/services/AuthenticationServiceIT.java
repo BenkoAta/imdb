@@ -53,7 +53,7 @@ class AuthenticationServiceIT {
     @Test
     @Order(1)
     void testCreateAccount() {
-        CreateUserDto actual = authenticationService.createUser(null, testCreateUserCommand);
+        CreateUserDto actual = authenticationService.createUser(null, testCreateUserCommand, (userDto, integer) -> {});
         assertThat(actual.getId()).isPositive();
         Optional<User> byId = userRepository.findById(actual.getId());
         assertThat(byId).isPresent();

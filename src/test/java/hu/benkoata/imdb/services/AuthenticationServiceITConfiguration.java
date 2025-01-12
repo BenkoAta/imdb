@@ -19,7 +19,7 @@ public class AuthenticationServiceITConfiguration {
     private long jwtExpirationSecs;
     @SuppressWarnings("unused")
     @Bean
-    public AuthenticationService getAuthenticationService(ModelMapper modelMapper,
+    public AuthenticationService authenticationService(ModelMapper modelMapper,
                                                           UserRepository userRepository,
                                                           PasswordEncoder passwordEncoder) {
         return new AuthenticationService(modelMapper,
@@ -31,7 +31,7 @@ public class AuthenticationServiceITConfiguration {
     }
     @SuppressWarnings("unused")
     @Bean
-    HandlerExceptionResolver getHandlerExceptionResolver() {
+    HandlerExceptionResolver handlerExceptionResolver() {
         return (request, response, handler, ex) -> new ModelAndView();
     }
 }

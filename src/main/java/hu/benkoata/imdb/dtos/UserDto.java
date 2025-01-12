@@ -11,4 +11,5 @@ public class UserDto {
     private String email;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String preferredLanguage = "hu";
 }

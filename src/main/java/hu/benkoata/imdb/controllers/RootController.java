@@ -1,7 +1,7 @@
 package hu.benkoata.imdb.controllers;
 
 import hu.benkoata.imdb.ImdbApplication;
-import hu.benkoata.imdb.services.ConfigFile;
+import hu.benkoata.imdb.services.ConfigFileReaderService;
 import hu.benkoata.imdb.services.Logger;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
@@ -28,7 +28,7 @@ public class RootController {
     public String getRoot(HttpServletRequest httpServletRequest,
                           @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        Properties props = new ConfigFile(ImdbApplication.class, "project.properties").read();
+        Properties props = new ConfigFileReaderService(ImdbApplication.class, "project.properties").read();
         return String.format(ROOT_TEMPLATE, props.getProperty("artifactId"), props.getProperty("version"),
                 getSwaggerUrl(httpServletRequest));
     }

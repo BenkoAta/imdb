@@ -31,11 +31,11 @@ public class ApplicationAuthenticationConfiguration {
     @Bean
     UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", username)));
+                    .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", username)));
     }
 
     @Bean
-    public JwtService getJwtService() {
+    public JwtService jwtService() {
         return new JwtService(secretKey, jwtExpirationSecs);
     }
     @Bean
