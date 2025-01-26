@@ -21,8 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest(showSql = false)
 @ContextConfiguration(classes = {
@@ -61,7 +60,7 @@ class AuthenticationServiceIT {
     }
     @Test
     @Order(2)
-    void testEnableUserIfVerificationWrong() {
+    void testEnableUserWrongVerification() {
         User user = userRepository.findByEmail(testCreateUserCommand.getEmail()).get();
         long id = user.getId();
         assertThrows(WrongVerificationCodeException.class,
@@ -69,10 +68,84 @@ class AuthenticationServiceIT {
     }
     @Test
     @Order(3)
-    void testEnableUserIfVerificationOk() {
+    void testEnableUserGoodVerification() {
         User user = userRepository.findByEmail(testCreateUserCommand.getEmail()).get();
         authenticationService.enableUserIfVerificationOk(null, user.getId(), user.getEmailVerificationCode());
         user = userRepository.findByEmail(testCreateUserCommand.getEmail()).get();
         assertFalse(user.isAccountLocked());
+    }
+
+    @Test
+    @Order(4)
+    void testAuthenticate() {
+        fail();
+    }
+
+    @Test
+    @Order(5)
+    void testGetFullUserDetails() {
+        fail();
+    }
+
+    @Test
+    @Order(6)
+    void testGetUserDetailsByEmail() {
+        fail();
+    }
+    @Test
+    @Order(7)
+    void testChangePasswordWithoutResetCodeNOK() {
+        fail();
+    }
+    @Test
+    @Order(8)
+    void testChangePasswordWithoutResetCodeOK() {
+        fail();
+    }
+    @Test
+    @Order(9)
+    void testChangePasswordWithResetCodeNOK() {
+        fail();
+    }
+    @Test
+    @Order(10)
+    void testChangePasswordWithResetCodeOK() {
+        fail();
+    }
+
+    @Test
+    void testLockUserByIdOrSendEmail() {
+        //Todo kétféle teszt email verifikált: delete kód kitöltve és levélküldés
+        // nem verifikált: lockolás
+        // tesztelés mockolt userRepositoryval
+        fail();
+    }
+
+    @Test
+    void testDeleteUserById() {
+        //Todo csak akkor törölhető, ha email nincs verifikálva és lockolt
+        // tesztelés mockolt userRepositoryval
+        fail();
+    }
+
+    @Test
+    void testLockUserByIdWithVerification() {
+        //Todo csak akkor lockolható, ha jó a verifikációs kód
+        // tesztelés mockolt userRepositoryval
+        fail();
+    }
+
+    @Test
+    void testDeleteUserByIdWithVerificationCode() {
+        //Todo csak akkor lockolható, ha jó a verifikációs kód
+        // tesztelés mockolt userRepositoryval
+        fail();
+    }
+    @Test
+    void testResetPasswordForNextChange() {
+        //Todo ha nem volt az email verifikálva, akkor exception
+        // resetpasswordcode és resetpassworduntil ellenőrzése
+        // levélküldés ellenőrzése
+        fail();
     }
 }

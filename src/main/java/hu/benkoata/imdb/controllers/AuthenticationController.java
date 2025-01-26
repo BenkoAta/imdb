@@ -43,12 +43,15 @@ public class AuthenticationController {
     private final MailSenderService mailSenderService;
     private final EndpointUsageLimiterService limiterService;
 
+    //Todo webtestclienttel tesztelni, hogy valóban létrejön a user,
+    // mockolt mailSenderService-vel az elküldött emailt tesztelni
+    // és a limitálást tesztelni
     @PostMapping(value = "/users")
     @Operation(summary = "Create new user",
             description = "Create a user with a locked account and" +
                     " send an email containing a verification link to request email address verification.")
     @ResponseStatus(HttpStatus.CREATED)
-    @SecurityRequirements()
+    @SecurityRequirements
     public CreateUserDto createUser(
             HttpServletRequest httpServletRequest,
             @RequestBody @Valid CreateUserCommand command,
@@ -72,17 +75,19 @@ public class AuthenticationController {
         );
     }
 
+    //Todo webtestclienttel tesztelni, hogy visszadja-e a mentett usert.
     @GetMapping("/users")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Find user by email.")
-    @SecurityRequirements()
+    @SecurityRequirements
     public UserDto getUser(HttpServletRequest httpServletRequest,
                            @RequestParam String email,
                            @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        return authenticationService.getUserDetails(httpServletRequest.getRequestURI(), email);
+        return authenticationService.getUserDetailsByEmail(httpServletRequest.getRequestURI(), email);
     }
 
+    //Todo webtestclienttel teszteli, hogy jó-e
     @GetMapping("/users/me")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Retrieve the currently logged-in user's data.")
@@ -90,9 +95,10 @@ public class AuthenticationController {
     public UserDto getMe(HttpServletRequest httpServletRequest,
                          @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        return authenticationService.getUserDetails(userDetails);
+        return authenticationService.getFullUserDetails(userDetails);
     }
 
+    //Todo webtestclienttel teszteli, hogy csak a saját user adatait adja vissza, másét nem
     @GetMapping("/users/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Retrieve user's data by id",
@@ -102,16 +108,19 @@ public class AuthenticationController {
                                @PathVariable long id,
                                @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        UserDto result = authenticationService.getUserDetails(userDetails);
+        UserDto result = authenticationService.getFullUserDetails(userDetails);
         if (id != result.getId()) {
             throw new InvalidUserIdException(httpServletRequest.getRequestURI());
         }
         return result;
     }
+    //todo megfelelően preparált userrel webtestclienttel tesztelni,
+    // hogy elküldi-e kódot email-ben (mockolt mailSenderService)
     @PutMapping("/users/{id}/unlock")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Request to unlock a user account",
             description = "Send an email containing a verification link to unlock the user's account.")
+    @SecurityRequirements
     public void requestToUnlockUserById(HttpServletRequest httpServletRequest,
                             @PathVariable long id,
                             @AuthenticationPrincipal UserDetails userDetails) {
@@ -132,10 +141,12 @@ public class AuthenticationController {
         );
     }
 
-
+    //Todo különböző státuszú (létrehozott, email nem verifikált/verifikált) userek esetén webtestclienttel tesztelni,
+    // hogy a megfelelő művelet történik (lockolás, emailküldés, törlés).
     @DeleteMapping("/users/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Request to delete (or lock) a user by id")
+    @SecurityRequirements
     public void requestToDeleteUserById(HttpServletRequest httpServletRequest,
                                @PathVariable long id,
                                @AuthenticationPrincipal UserDetails userDetails) {
@@ -157,10 +168,13 @@ public class AuthenticationController {
                 new Locale(userDto.getPreferredLanguage())
         );
     }
+
+    //Todo webtestclienttel tesztelni, hogy a megfelelően preparált user lockolása / törlése megtörténik-e
+    // hibás próbálkozások limitálásának tesztelése
     @GetMapping(DELETE_VERIFICATION)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Delete verification using a verification code")
-    @SecurityRequirements()
+    @SecurityRequirements
     public String deleteUserIfVerificationOk(HttpServletRequest httpServletRequest,
                                              @PathVariable long id,
                                              @RequestParam("verification-code") int verificationCode,
@@ -171,10 +185,12 @@ public class AuthenticationController {
         authenticationService.deleteUserById(httpServletRequest.getRequestURI(), id, verificationCode);
         return "User has been locked/deleted!";
     }
+    //Todo webtestclienttel tesztelni a preparált user verifikálását
+    // hibás próbálkozások limitálását
     @GetMapping(EMAIL_VERIFICATION)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Email address verification using a verification code")
-    @SecurityRequirements()
+    @SecurityRequirements
     public String enableUserIfEmailVerificationOk(
             HttpServletRequest httpServletRequest,
             @PathVariable long id,
@@ -185,10 +201,12 @@ public class AuthenticationController {
         authenticationService.enableUserIfVerificationOk(httpServletRequest.getRequestURI(), id, verificationCode);
         return "Successful verification!";
     }
+    //Todo webtestclienttel tesztelni a preparált user verifikálását
+    // hibás próbálkozások limitálását
     @GetMapping(UNLOCK_VERIFICATION)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Unlock user verification using a verification code")
-    @SecurityRequirements()
+    @SecurityRequirements
     public String enableUserIfUnlockVerificationOk(
             HttpServletRequest httpServletRequest,
             @PathVariable long id,
@@ -200,11 +218,14 @@ public class AuthenticationController {
         return "Successful verification!";
     }
 
+    //Todo webtestclienttel tesztelni, hogy elküldi-e az emailt
+    // mockolt mailSenderService-vel
     @DeleteMapping("/users/{id}/password")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Reset the user's password for the next password change",
             description = "The sent code remains valid until the timeout (10 minutes) expires," +
                     " a new login occurs, or the password is changed.")
+    @SecurityRequirements
     public void resetPassword(HttpServletRequest httpServletRequest,
                               @PathVariable long id,
                               @AuthenticationPrincipal UserDetails userDetails) {
@@ -222,11 +243,13 @@ public class AuthenticationController {
         );
     }
 
+    //Todo webtestclienttel tesztelni, hogy a jelszóváltoztatás sikeres-e vagy hibás authentikáció esetén visszautasítja-e
+    // kísérletek számának limitálása
     @PutMapping("/users/change-password")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Change the user's password",
             description = "Upon successful authentication with the provided credentials.")
-    @SecurityRequirements()
+    @SecurityRequirements
     public void changePassword(
             HttpServletRequest httpServletRequest,
             @RequestBody ChangeCredentialsCommand changeCredentialsCommand,
@@ -235,10 +258,11 @@ public class AuthenticationController {
         authenticationService.changePassword(httpServletRequest.getRequestURI(), changeCredentialsCommand, LocalDateTime.now());
     }
 
+    //Todo webtestclient tesztelés, kísérletek számának limitálása
     @PostMapping("/credentials")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Log in with credentials to obtain a JWT token.")
-    @SecurityRequirements()
+    @SecurityRequirements
     public JwtTokenDto login(HttpServletRequest httpServletRequest,
                              @RequestBody CredentialsCommand credentials,
                              @AuthenticationPrincipal UserDetails userDetails) {

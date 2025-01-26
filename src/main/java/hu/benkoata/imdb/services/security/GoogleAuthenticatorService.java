@@ -1,7 +1,6 @@
 package hu.benkoata.imdb.services.security;
 
 import com.warrenstrange.googleauth.GoogleAuthenticator;
-import hu.benkoata.imdb.entities.User;
 import hu.benkoata.imdb.exceptions.TotpAuthenticationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,14 +14,12 @@ public class GoogleAuthenticatorService {
     public String getKey() {
         return gAuth.createCredentials().getKey();
     }
-
     public String getQRUrl(String userName, String key) {
         return String.format("otpauth://totp/%s?secret=%s&issuer=%s",
                 userName, key, ISSUER);
     }
 
-    public void authenticate(String requestURI, User authenticatedUser, int totpCode) {
-        String gAuthKey = authenticatedUser.getGAuthKey();
+    public void authenticate(String requestURI, String gAuthKey, int totpCode) {
         if (!gAuth.authorize(gAuthKey, totpCode)) {
             throw new TotpAuthenticationException(requestURI);
         }

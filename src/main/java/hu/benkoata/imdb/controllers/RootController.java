@@ -21,14 +21,17 @@ import java.util.Properties;
 @Tag(name = "root operations")
 @RequiredArgsConstructor
 public class RootController {
+    private final ConfigFileReaderService configFileReaderService;
     private static final String ROOT_TEMPLATE = "<title>%1$s</title>Webapp name: %1$s<br>Version: %2$s<br><a href=%3$s>swagger-UI</a>";
+    //Todo @WebMvcTest tesztelés, hogy a megfelelő html-t adja vissza, mockolt ConfigFileReaderService használattal
+    // minta:/home/benkoa/java-projects/pdcapi/pdcapi/src/test/java/hu/benkoata/pdcapi/controllers/ErpproxyControllerIT.java
     @GetMapping({"/","/api"})
     @Operation(summary = "get webapp name and version")
     @SecurityRequirements()
     public String getRoot(HttpServletRequest httpServletRequest,
                           @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        Properties props = new ConfigFileReaderService(ImdbApplication.class, "project.properties").read();
+        Properties props = configFileReaderService.read(ImdbApplication.class, "project.properties");
         return String.format(ROOT_TEMPLATE, props.getProperty("artifactId"), props.getProperty("version"),
                 getSwaggerUrl(httpServletRequest));
     }

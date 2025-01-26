@@ -1,6 +1,7 @@
 package hu.benkoata.imdb.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,20 +13,19 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+@Service
 @RequiredArgsConstructor
 public class ConfigFileReaderService {
-    private final Class<?> aClass;
-    private final String fileName;
     private static final Charset charset = StandardCharsets.UTF_8;
 
-    public Properties read() {
+    public Properties read(Class<?> aClass, String fileName) {
         if (aClass != null) {
-            return readFromResource();
+            return readFromResource(aClass, fileName);
         }
-        return readFromFile();
+        return readFromFile(fileName);
     }
 
-    private Properties readFromResource() {
+    private Properties readFromResource(Class<?> aClass, String fileName) {
         Properties props = new Properties();
         try (InputStream is = aClass.getResourceAsStream(fileName)) {
             try (InputStreamReader isr = new InputStreamReader(is, charset)) {
@@ -37,7 +37,7 @@ public class ConfigFileReaderService {
         return props;
     }
 
-    private Properties readFromFile() {
+    private Properties readFromFile(String fileName) {
         Properties props = new Properties();
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName), charset)) {
             props.load(reader);

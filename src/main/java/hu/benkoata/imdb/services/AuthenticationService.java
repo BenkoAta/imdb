@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Random;
 import java.util.function.ObjIntConsumer;
 
@@ -74,8 +75,8 @@ public class AuthenticationService {
     public JwtTokenDto authenticate(String requestURI, CredentialsCommand credentials) {
         User authenticatedUser = authenticate(requestURI, credentials.getUsername(), credentials.getPassword(),
                 credentials.getTotpCode());
-        String token = jwtService.generateToken(authenticatedUser);
-        return new JwtTokenDto(token, jwtService.getExpirationTime(token, null));
+        String token = jwtService.generateToken(authenticatedUser.getUsername(), new Date(System.currentTimeMillis()));
+        return new JwtTokenDto(token, jwtService.extractExpirationTime(token, null));
     }
     private User authenticate(String requestURI, String username, String password, int totpCode) {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
@@ -85,7 +86,7 @@ public class AuthenticationService {
         User result = userRepository.findByEmail(username)
                 .orElseThrow(() -> new BadCredentialsException("User not found with name: " + username));
         clearResetPasswordCode(result);
-        googleAuthenticatorService.authenticate(requestURI, result, totpCode);
+        googleAuthenticatorService.authenticate(requestURI, result.getGAuthKey(), totpCode);
         return result;
     }
     private void clearResetPasswordCode(User user) {
@@ -106,11 +107,11 @@ public class AuthenticationService {
         userRepository.save(user);
     }
 
-    public UserDto getUserDetails(UserDetails userDetails) {
+    public UserDto getFullUserDetails(UserDetails userDetails) {
         return modelMapper.map(userDetails, UserDto.class);
     }
 
-    public UserDto getUserDetails(String requestURI, String email) {
+    public UserDto getUserDetailsByEmail(String requestURI, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(requestURI, email));
         UserDto result = new UserDto();
@@ -160,7 +161,7 @@ public class AuthenticationService {
     public void deleteUserById(String requestURI, long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(requestURI, id));
-        if (!user.isEmailVerified()) {
+        if (!user.isEmailVerified() && user.isAccountLocked()) {
             userRepository.delete(user);
         }
     }

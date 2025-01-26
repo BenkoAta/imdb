@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,26 +27,25 @@ public class JwtService {
     private final String secretKey;
     @Getter
     private final long jwtExpirationSecs;
-
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails, new Date(System.currentTimeMillis()));
+    public static String createSecretKey() {
+        return Base64.getEncoder().encodeToString(Keys.secretKeyFor(JwtService.SIGNATURE_ALGORITHM).getEncoded());
     }
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return generateToken(extraClaims, userDetails, new Date(System.currentTimeMillis()));
+    public String generateToken(String userName, Date referenceDate) {
+        return generateToken(new HashMap<>(), userName, referenceDate);
     }
-    String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, Date referenceDate) {
-        return buildToken(extraClaims, userDetails, referenceDate, jwtExpirationSecs);
+    String generateToken(Map<String, Object> extraClaims, String userName, Date referenceDate) {
+        return buildToken(extraClaims, userName, referenceDate, jwtExpirationSecs);
     }
     private String buildToken(
             Map<String, Object> extraClaims,
-            UserDetails userDetails,
+            String userName,
             Date referenceDate,
             long expiration
     ) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(userName)
                 .setIssuedAt(referenceDate)
                 .setExpiration(new Date(referenceDate.getTime() + expiration * 1000))
                 .signWith(getSignInKey(), SIGNATURE_ALGORITHM)
@@ -73,7 +73,7 @@ public class JwtService {
         }
         return result;
     }
-    public LocalDateTime getExpirationTime(String token, Date referenceDate) {
+    public LocalDateTime extractExpirationTime(String token, Date referenceDate) {
         Date expiration = extractExpiration(token, referenceDate);
         return LocalDateTime.ofInstant(expiration.toInstant(), ZoneId.systemDefault());
     }

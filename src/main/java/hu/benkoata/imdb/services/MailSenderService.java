@@ -15,6 +15,7 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
+//Todo mockolt mailSender segítségével tesztelni a funkciókat
 public class MailSenderService {
     private final JavaMailSender mailSender;
     private final String from;
