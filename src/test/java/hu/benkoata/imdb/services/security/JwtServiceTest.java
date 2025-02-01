@@ -1,6 +1,6 @@
 package hu.benkoata.imdb.services.security;
 
-import hu.benkoata.imdb.entities.User;
+import hu.benkoata.imdb.model.UserDetailDto;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class JwtServiceTest {
                     LocalDateTime.of(2025, 1, 3, 12, 0, 0),
                     ZoneId.systemDefault())
             .toInstant());
-    static final User USER = new User();
+    static final UserDetailDto USER = new UserDetailDto();
 
     static {
         USER.setEmail("a@b.c");

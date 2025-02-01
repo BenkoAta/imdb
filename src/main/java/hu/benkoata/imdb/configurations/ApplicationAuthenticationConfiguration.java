@@ -1,8 +1,8 @@
 package hu.benkoata.imdb.configurations;
 
+import hu.benkoata.imdb.model.UserDetailDto;
 import hu.benkoata.imdb.repositories.UserRepository;
-import hu.benkoata.imdb.services.security.JwtService;
-import org.springframework.beans.factory.annotation.Value;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,10 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @SuppressWarnings("unused")
 @Configuration
 public class ApplicationAuthenticationConfiguration {
-    @Value("${security.jwt.secret-key}")
-    private String secretKey;
-    @Value("${security.jwt.expiration-secs}")
-    private long jwtExpirationSecs;
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -28,16 +24,21 @@ public class ApplicationAuthenticationConfiguration {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+//@Bean
+//public AuthenticationManager authenticationManager(UserDetailsService userDetailsService) {
+//    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+//    authProvider.setUserDetailsService(userDetailsService);
+//    authProvider.setPasswordEncoder(passwordEncoder());
+//    return new ProviderManager(List.of(authProvider));
+//}
     @Bean
-    UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", username)));
+    UserDetailsService userDetailsService(UserRepository userRepository, ModelMapper modelMapper) {
+        return username -> modelMapper.map(
+                userRepository.findByEmail(username)
+                    .orElseThrow(() -> new UsernameNotFoundException(String.format("User %s not found", username))),
+                UserDetailDto.class);
     }
 
-    @Bean
-    public JwtService jwtService() {
-        return new JwtService(secretKey, jwtExpirationSecs);
-    }
     @Bean
     public DaoAuthenticationProvider getAuthenticationProvider(UserDetailsService userDetailsService,
                                                                PasswordEncoder passwordEncoder) {

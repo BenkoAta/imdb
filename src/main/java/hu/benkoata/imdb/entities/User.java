@@ -5,19 +5,15 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
 
 @Table(name = "users")
 @Entity
 @Getter
 @Setter
-public class User implements UserDetails {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
@@ -27,12 +23,6 @@ public class User implements UserDetails {
     @Column(unique = true, length = 100, nullable = false)
     @Getter()
     private String email;
-
-    @Override
-    public String getUsername() {
-        return email;
-    }
-
     @Column(nullable = false)
     private String password;
     @CreationTimestamp
@@ -50,17 +40,6 @@ public class User implements UserDetails {
     private Integer resetPasswordCode;
     @Column(insertable = false, columnDefinition = "datetime")
     private LocalDateTime resetPasswordUntil;
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return !accountLocked;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,7 +47,6 @@ public class User implements UserDetails {
         User user = (User) o;
         return id == user.id;
     }
-
     @Override
     public int hashCode() {
         return Objects.hash(id);

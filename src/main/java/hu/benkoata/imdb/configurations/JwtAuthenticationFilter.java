@@ -2,23 +2,18 @@ package hu.benkoata.imdb.configurations;
 
 import hu.benkoata.imdb.services.security.JwtService;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-
-import java.io.IOException;
-@Configuration
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final HandlerExceptionResolver handlerExceptionResolver;
@@ -28,33 +23,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+                                    @NonNull FilterChain filterChain) {
         final String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
         try {
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUsername(jwt, null);
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (userEmail != null && authentication == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
-                if (jwtService.isTokenValid(jwt, userDetails, null)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (authHeader == null) {
+                filterChain.doFilter(request, response);
+            } else {
+                final String jwt = getJwtTokenFromHeader(authHeader);
+                final String username = jwtService.extractUsername(jwt, null);
+                if (username != null) {
+                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+                    if (jwtService.isTokenValid(jwt, userDetails, null)) {
+                        SecurityContextHolder.getContext().setAuthentication(buildAuthToken(userDetails, request));
+                    }
                 }
+                filterChain.doFilter(request, response);
             }
-            filterChain.doFilter(request, response);
         } catch (Exception exception) {
             handlerExceptionResolver.resolveException(request, response, null, exception);
         }
+    }
+
+    private String getJwtTokenFromHeader(String authHeader) {
+        if (!authHeader.startsWith("Bearer ")) {
+            throw new AuthenticationServiceException(
+                    "Not possible to use authentication: " + authHeader.substring(0, 6) + "!");
+        }
+        return authHeader.substring(7);
+    }
+
+    private UsernamePasswordAuthenticationToken buildAuthToken(UserDetails userDetails,
+                                                               HttpServletRequest request) {
+        UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
+        result.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        return result;
     }
 }

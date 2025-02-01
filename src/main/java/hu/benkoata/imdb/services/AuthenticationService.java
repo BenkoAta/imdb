@@ -45,7 +45,7 @@ public class AuthenticationService {
         User savedUser = userRepository.save(user);
         mailFunction.accept(modelMapper.map(savedUser, UserDto.class), savedUser.getEmailVerificationCode());
         return new CreateUserDto(savedUser.getId(),
-                googleAuthenticatorService.getQRUrl(savedUser.getUsername(), savedUser.getGAuthKey()));
+                googleAuthenticatorService.getQRUrl(savedUser.getEmail(), savedUser.getGAuthKey()));
     }
 
     public void unlockUser(String requestURI, long userId, ObjIntConsumer<UserDto> mailFunction) {
@@ -75,7 +75,7 @@ public class AuthenticationService {
     public JwtTokenDto authenticate(String requestURI, CredentialsCommand credentials) {
         User authenticatedUser = authenticate(requestURI, credentials.getUsername(), credentials.getPassword(),
                 credentials.getTotpCode());
-        String token = jwtService.generateToken(authenticatedUser.getUsername(), new Date(System.currentTimeMillis()));
+        String token = jwtService.generateToken(authenticatedUser.getEmail(), new Date(System.currentTimeMillis()));
         return new JwtTokenDto(token, jwtService.extractExpirationTime(token, null));
     }
     private User authenticate(String requestURI, String username, String password, int totpCode) {

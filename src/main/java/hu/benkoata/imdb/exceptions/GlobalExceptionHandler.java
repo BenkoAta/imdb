@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,7 +41,13 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
-
+    @ExceptionHandler(AuthenticationServiceException.class)
+    public ProblemDetail handleAuthenticationServiceException(AuthenticationServiceException exception, HttpServletRequest request) {
+        return createProblemDetail(Status.FORBIDDEN,
+                exception,
+                request.getRequestURI() + "/authentication-forbidden",
+                "Authentication not possible!");
+    }
     @ExceptionHandler(AccountStatusException.class)
     public ProblemDetail handleAccountStatusException(AccountStatusException exception, HttpServletRequest request) {
         return createProblemDetail(Status.FORBIDDEN,
@@ -70,7 +77,7 @@ public class GlobalExceptionHandler {
         return createProblemDetail(Status.FORBIDDEN,
                 exception,
                 request.getRequestURI() + "/jwt-expired",
-                "Jwt expired!\"");
+                "Jwt expired!");
     }
 
     @ExceptionHandler(AbstractThrowableProblem.class)

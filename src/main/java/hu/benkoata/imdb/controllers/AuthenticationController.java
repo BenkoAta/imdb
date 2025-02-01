@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.FilterChainProxy;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -38,11 +42,28 @@ public class AuthenticationController {
     public static final String EMAIL_VERIFICATION = "/users/{id}/email-verification";
     public static final String UNLOCK_VERIFICATION = "/users/{id}/unlock-verification";
     private static final String VERIFICATION_CODE_PARAM = "?verification-code={code}";
+    public static final String SECURITY = "/security";
+    public static final String USERS_ME = "/users/me";
     private final AuthenticationService authenticationService;
     private final UserRepository userRepository;
     private final MailSenderService mailSenderService;
     private final EndpointUsageLimiterService limiterService;
+    private final Filter springSecurityFilterChain;
 
+    @GetMapping(SECURITY)
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get security filter chain.")
+    @SecurityRequirement(name = "BearerAuth")
+    public List<String> getSecurity(HttpServletRequest httpServletRequest,
+                         @AuthenticationPrincipal UserDetails userDetails) {
+        Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
+        FilterChainProxy filterChainProxy = (FilterChainProxy) springSecurityFilterChain;
+        List<SecurityFilterChain> list = filterChainProxy.getFilterChains();
+        return list.stream()
+                .flatMap(chain -> chain.getFilters().stream())
+                .map(filter -> filter.getClass().toString())
+                .toList();
+    }
     //Todo webtestclienttel tesztelni, hogy valóban létrejön a user,
     // mockolt mailSenderService-vel az elküldött emailt tesztelni
     // és a limitálást tesztelni
@@ -88,7 +109,7 @@ public class AuthenticationController {
     }
 
     //Todo webtestclienttel teszteli, hogy jó-e
-    @GetMapping("/users/me")
+    @GetMapping(USERS_ME)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Retrieve the currently logged-in user's data.")
     @SecurityRequirement(name = "BearerAuth")
@@ -97,7 +118,6 @@ public class AuthenticationController {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
         return authenticationService.getFullUserDetails(userDetails);
     }
-
     //Todo webtestclienttel teszteli, hogy csak a saját user adatait adja vissza, másét nem
     @GetMapping("/users/{id}")
     @ResponseStatus(HttpStatus.OK)
