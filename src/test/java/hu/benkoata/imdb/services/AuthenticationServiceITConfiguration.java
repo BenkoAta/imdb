@@ -1,5 +1,6 @@
 package hu.benkoata.imdb.services;
 
+import hu.benkoata.imdb.configurations.ApplicationAuthenticationConfiguration;
 import hu.benkoata.imdb.configurations.JwtServiceConfiguration;
 import hu.benkoata.imdb.configurations.ModelMapperConfiguraion;
 import hu.benkoata.imdb.repositories.UserRepository;
@@ -17,7 +18,8 @@ import org.springframework.web.servlet.ModelAndView;
 @TestConfiguration
 @Import({JwtServiceConfiguration.class,
         ModelMapperConfiguraion.class,
-        GoogleAuthenticatorService.class})
+//        GoogleAuthenticatorService.class,
+        ApplicationAuthenticationConfiguration.class})
 public class AuthenticationServiceITConfiguration {
     @SuppressWarnings("unused")
     @Bean

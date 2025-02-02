@@ -10,13 +10,14 @@ import hu.benkoata.imdb.services.security.GoogleAuthenticatorService;
 import hu.benkoata.imdb.services.security.JwtService;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,11 +26,14 @@ import java.util.Date;
 import java.util.Random;
 import java.util.function.ObjIntConsumer;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Getter
 @SuppressWarnings("unused")
 public class AuthenticationService {
     private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS512;
+    private final Random random = new Random();
     private final ModelMapper modelMapper;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -40,8 +44,7 @@ public class AuthenticationService {
     @Transactional
     public CreateUserDto createUser(String requestURI, CreateUserCommand command, ObjIntConsumer<UserDto> mailFunction) {
         validate(command);
-        User user = new User();
-        setFields(user, command, new Random());
+        User user = new User(command, passwordEncoder::encode, googleAuthenticatorService.getKey(), random);
         User savedUser = userRepository.save(user);
         mailFunction.accept(modelMapper.map(savedUser, UserDto.class), savedUser.getEmailVerificationCode());
         return new CreateUserDto(savedUser.getId(),
@@ -50,20 +53,12 @@ public class AuthenticationService {
 
     public void unlockUser(String requestURI, long userId, ObjIntConsumer<UserDto> mailFunction) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(requestURI, userId));
-        user.setEmailVerificationCode(getVerificationCode(new Random()));
+        user.setEmailVerificationCode(getVerificationCode());
         userRepository.save(user);
         mailFunction.accept(modelMapper.map(user, UserDto.class), user.getEmailVerificationCode());
     }
 
-    private void setFields(User user, CreateUserCommand command, Random random) {
-        user.setEmail(command.getEmail());
-        user.setEmailVerificationCode(getVerificationCode(random));
-        user.setFullName(command.getFullName());
-        user.setPassword(passwordEncoder.encode(command.getPassword()));
-        user.setGAuthKey(googleAuthenticatorService.getKey());
-    }
-
-    private int getVerificationCode(Random random) {
+    private int getVerificationCode() {
         return random.nextInt(100_000, 1_000_000);
     }
 
@@ -107,8 +102,10 @@ public class AuthenticationService {
         userRepository.save(user);
     }
 
-    public UserDto getFullUserDetails(UserDetails userDetails) {
-        return modelMapper.map(userDetails, UserDto.class);
+    public UserDto getFullUserDetails(String requestURI, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(requestURI, email));
+        return modelMapper.map(user, UserDto.class);
     }
 
     public UserDto getUserDetailsByEmail(String requestURI, String email) {
@@ -151,7 +148,7 @@ public class AuthenticationService {
             userRepository.save(user);
             return true;
         } else {
-            user.setDeleteCode(getVerificationCode(new Random()));
+            user.setDeleteCode(getVerificationCode());
             userRepository.save(user);
             mailFunction.accept(modelMapper.map(user, UserDto.class), user.getDeleteCode());
             return false;
@@ -195,7 +192,7 @@ public class AuthenticationService {
         if (!user.isEmailVerified()) {
             throw new EmailNotVerifiedException(requestURI);
         }
-        user.setResetPasswordCode(getVerificationCode(new Random()));
+        user.setResetPasswordCode(getVerificationCode());
         user.setResetPasswordUntil(referenceDateTime.plusMinutes(10));
         userRepository.save(user);
         mailFunction.accept(modelMapper.map(user, UserDto.class), user.getResetPasswordCode());

@@ -1,18 +1,23 @@
 package hu.benkoata.imdb.entities;
 
+import hu.benkoata.imdb.dtos.CreateUserCommand;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Random;
+import java.util.function.UnaryOperator;
 
 @Table(name = "users")
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,6 +45,16 @@ public class User {
     private Integer resetPasswordCode;
     @Column(insertable = false, columnDefinition = "datetime")
     private LocalDateTime resetPasswordUntil;
+
+    public User(CreateUserCommand command, UnaryOperator<String> pwdEncoder, String gAuthKey, Random random) {
+        this();
+        email = command.getEmail();
+        emailVerificationCode = random.nextInt(100_000, 1_000_000);
+        fullName = command.getFullName();
+        this.password = pwdEncoder.apply(command.getPassword());
+        this.gAuthKey = gAuthKey;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

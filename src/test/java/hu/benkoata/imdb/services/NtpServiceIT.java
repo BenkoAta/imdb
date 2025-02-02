@@ -4,17 +4,18 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class NtpSyncCheckerServiceIT {
+class NtpServiceIT {
+    NtpService ntpService = new NtpService(1);
     @Test
     void testSync() {
-        assertNotNull(new NtpSyncCheckerService(LocalDateTime.now(), 1));
+        assertThat(Math.abs(ntpService.checkSync(LocalDateTime.now()))).isLessThan(2);
     }
     @Test
     void testOutOfSync() {
         LocalDateTime future = LocalDateTime.now().plusSeconds(10);
-        assertThatThrownBy(() -> new NtpSyncCheckerService(future, 1)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> ntpService.checkSync(future)).isInstanceOf(IllegalStateException.class);
     }
 }

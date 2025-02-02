@@ -1,5 +1,6 @@
 package hu.benkoata.imdb.services;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeInfo;
@@ -12,10 +13,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Slf4j
-public class NtpSyncCheckerService {
+@RequiredArgsConstructor
+public class NtpService {
     private static final String NTP_SERVER = "pool.ntp.org";
+    private final long acceptableDeviationSecs;
 
-    public NtpSyncCheckerService(LocalDateTime referenceDateTime, long acceptableDeviationSecs) {
+    public long checkSync(LocalDateTime referenceDateTime) {
         try(NTPUDPClient ntpClient = new NTPUDPClient()) {
             InetAddress hostAddr = InetAddress.getByName(NTP_SERVER);
             TimeInfo timeInfo = ntpClient.getTime(hostAddr);
@@ -29,6 +32,7 @@ public class NtpSyncCheckerService {
             if (deviation > acceptableDeviationSecs) {
                 throw new IllegalStateException(String.format("The time deviation from the network time is too large (%d sec).", deviation));
             }
+            return deviation;
         } catch (IOException ioe) {
             throw new IllegalStateException("IO error!", ioe);
         }

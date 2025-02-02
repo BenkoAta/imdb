@@ -1,8 +1,9 @@
 package hu.benkoata.imdb.services.security;
 
 import hu.benkoata.imdb.exceptions.TotpAuthenticationException;
-import hu.benkoata.imdb.services.NtpSyncCheckerService;
+import hu.benkoata.imdb.services.NtpService;
 import org.awaitility.Durations;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,11 @@ class GoogleAuthenticatorServiceIT {
     GoogleAuthenticatorService googleAuthenticatorService = new GoogleAuthenticatorService();
     ToptService toptService = new ToptService();
     private static final String SECRET_KEY = "TR2EFNOQ6SIU5YE7JCWWJHIAZNUYROZX";
+    @BeforeAll
+    static void init() {
+        NtpService ntpService = new NtpService(1);
+        ntpService.checkSync(LocalDateTime.now());
+    }
     @Test
     void testGetKey() {
         String actual = googleAuthenticatorService.getKey();
@@ -31,7 +37,6 @@ class GoogleAuthenticatorServiceIT {
 
     @Test
     void testAuthenticate() {
-        new NtpSyncCheckerService(LocalDateTime.now(), 1);
         int successCounter = 0;
         int totpCode = toptService.generateToptCode(SECRET_KEY);
         for (int i = 0; i < 2; i++) {
@@ -46,7 +51,6 @@ class GoogleAuthenticatorServiceIT {
     }
     @Test
     void testAuthenticateException() {
-        new NtpSyncCheckerService(LocalDateTime.now(), 1);
         toptService.setReferenceDateTime(LocalDateTime.now().minusSeconds(90));
         int totpCode = toptService.generateToptCode(SECRET_KEY);
         assertThatThrownBy(() -> googleAuthenticatorService.authenticate("", SECRET_KEY, totpCode))

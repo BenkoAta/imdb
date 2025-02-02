@@ -116,7 +116,7 @@ public class AuthenticationController {
     public UserDto getMe(HttpServletRequest httpServletRequest,
                          @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        return authenticationService.getFullUserDetails(userDetails);
+        return authenticationService.getFullUserDetails(httpServletRequest.getRequestURI(), userDetails.getUsername());
     }
     //Todo webtestclienttel teszteli, hogy csak a saját user adatait adja vissza, másét nem
     @GetMapping("/users/{id}")
@@ -128,7 +128,7 @@ public class AuthenticationController {
                                @PathVariable long id,
                                @AuthenticationPrincipal UserDetails userDetails) {
         Logger.logRequest(log::info, httpServletRequest, Logger.GET_MAPPING, userDetails);
-        UserDto result = authenticationService.getFullUserDetails(userDetails);
+        UserDto result = authenticationService.getFullUserDetails(httpServletRequest.getRequestURI(), userDetails.getUsername());
         if (id != result.getId()) {
             throw new InvalidUserIdException(httpServletRequest.getRequestURI());
         }
